@@ -6,6 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface HealthStatus {
-  status: string;
+export interface EventMusician {
+  id: number;
+  eventId: number;
+  musicianId: number;
+  musicianName: string;
+  instruments: string;
+  fee?: number | null;
 }

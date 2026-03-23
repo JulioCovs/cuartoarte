@@ -1,20 +1,78 @@
-// Export your models here. Add one export per file
-// export * from "./posts";
-//
-// Each model/table should ideally be split into different files.
-// Each model/table should define a Drizzle table, insert schema, and types:
-//
-//   import { pgTable, text, serial } from "drizzle-orm/pg-core";
-//   import { createInsertSchema } from "drizzle-zod";
-//   import { z } from "zod/v4";
-//
-//   export const postsTable = pgTable("posts", {
-//     id: serial("id").primaryKey(),
-//     title: text("title").notNull(),
-//   });
-//
-//   export const insertPostSchema = createInsertSchema(postsTable).omit({ id: true });
-//   export type InsertPost = z.infer<typeof insertPostSchema>;
-//   export type Post = typeof postsTable.$inferSelect;
+import { pgTable, text, serial, integer, numeric, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod/v4";
 
-export {}
+export const clientsTable = pgTable("clients", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  address: text("address"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertClientSchema = createInsertSchema(clientsTable).omit({ id: true, createdAt: true });
+export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Client = typeof clientsTable.$inferSelect;
+
+export const musiciansTable = pgTable("musicians", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  instruments: text("instruments").notNull(),
+  specialty: text("specialty"),
+  rate: numeric("rate", { precision: 10, scale: 2 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertMusicianSchema = createInsertSchema(musiciansTable).omit({ id: true, createdAt: true });
+export type InsertMusician = z.infer<typeof insertMusicianSchema>;
+export type Musician = typeof musiciansTable.$inferSelect;
+
+export const eventsTable = pgTable("events", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  clientId: integer("client_id").references(() => clientsTable.id),
+  date: text("date").notNull(),
+  time: text("time").notNull(),
+  venue: text("venue").notNull(),
+  eventType: text("event_type").notNull(),
+  status: text("status").notNull().default("pendiente"),
+  totalAmount: numeric("total_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  advanceAmount: numeric("advance_amount", { precision: 10, scale: 2 }).notNull().default("0"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertEventSchema = createInsertSchema(eventsTable).omit({ id: true, createdAt: true });
+export type InsertEvent = z.infer<typeof insertEventSchema>;
+export type Event = typeof eventsTable.$inferSelect;
+
+export const eventMusiciansTable = pgTable("event_musicians", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => eventsTable.id, { onDelete: "cascade" }).notNull(),
+  musicianId: integer("musician_id").references(() => musiciansTable.id, { onDelete: "cascade" }).notNull(),
+  fee: numeric("fee", { precision: 10, scale: 2 }),
+});
+
+export const insertEventMusicianSchema = createInsertSchema(eventMusiciansTable).omit({ id: true });
+export type InsertEventMusician = z.infer<typeof insertEventMusicianSchema>;
+export type EventMusician = typeof eventMusiciansTable.$inferSelect;
+
+export const paymentsTable = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => eventsTable.id, { onDelete: "cascade" }).notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  type: text("type").notNull(),
+  method: text("method").notNull(),
+  date: text("date").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertPaymentSchema = createInsertSchema(paymentsTable).omit({ id: true, createdAt: true });
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof paymentsTable.$inferSelect;

@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Cuarto Arte API - Gestión de eventos musicales y artísticos
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: clients
+    description: Client management
+  - name: musicians
+    description: Musician management
+  - name: events
+    description: Event management
+  - name: payments
+    description: Payment management
+  - name: reports
+    description: Reports and statistics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,475 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /clients:
+    get:
+      operationId: getClients
+      tags: [clients]
+      summary: List all clients
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClient"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a client by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateClient"
+      responses:
+        "200":
+          description: Client updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Client deleted
+
+  /musicians:
+    get:
+      operationId: getMusicians
+      tags: [musicians]
+      summary: List all musicians
+      responses:
+        "200":
+          description: List of musicians
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Musician"
+    post:
+      operationId: createMusician
+      tags: [musicians]
+      summary: Create a new musician
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMusician"
+      responses:
+        "201":
+          description: Musician created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Musician"
+
+  /musicians/{id}:
+    get:
+      operationId: getMusician
+      tags: [musicians]
+      summary: Get a musician by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Musician found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Musician"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateMusician
+      tags: [musicians]
+      summary: Update a musician
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMusician"
+      responses:
+        "200":
+          description: Musician updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Musician"
+    delete:
+      operationId: deleteMusician
+      tags: [musicians]
+      summary: Delete a musician
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Musician deleted
+
+  /events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: List all events
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create a new event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvent"
+      responses:
+        "201":
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get an event by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateEvent
+      tags: [events]
+      summary: Update an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEvent"
+      responses:
+        "200":
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+    delete:
+      operationId: deleteEvent
+      tags: [events]
+      summary: Delete an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Event deleted
+
+  /events/{id}/musicians:
+    get:
+      operationId: getEventMusicians
+      tags: [events]
+      summary: Get musicians assigned to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Event musicians
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventMusician"
+    post:
+      operationId: assignMusiciansToEvent
+      tags: [events]
+      summary: Assign musicians to an event
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                musicianIds:
+                  type: array
+                  items:
+                    type: integer
+              required:
+                - musicianIds
+      responses:
+        "200":
+          description: Musicians assigned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventMusician"
+
+  /payments:
+    get:
+      operationId: getPayments
+      tags: [payments]
+      summary: List all payments
+      parameters:
+        - name: eventId
+          in: query
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a new payment or advance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePayment"
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    put:
+      operationId: updatePayment
+      tags: [payments]
+      summary: Update a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePayment"
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Payment deleted
+
+  /reports/income:
+    get:
+      operationId: getIncomeReport
+      tags: [reports]
+      summary: Get income report with optional date filters
+      parameters:
+        - name: startDate
+          in: query
+          schema:
+            type: string
+        - name: endDate
+          in: query
+          schema:
+            type: string
+        - name: groupBy
+          in: query
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        "200":
+          description: Income report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeReport"
+
+  /reports/summary:
+    get:
+      operationId: getReportSummary
+      tags: [reports]
+      summary: Get overall business summary stats
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +511,347 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - createdAt
+
+    CreateClient:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - name
+        - phone
+
+    Musician:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        instruments:
+          type: string
+        specialty:
+          type: string
+          nullable: true
+        rate:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - phone
+        - instruments
+        - createdAt
+
+    CreateMusician:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+          nullable: true
+        instruments:
+          type: string
+        specialty:
+          type: string
+          nullable: true
+        rate:
+          type: number
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+      required:
+        - name
+        - phone
+        - instruments
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        clientId:
+          type: integer
+          nullable: true
+        clientName:
+          type: string
+          nullable: true
+        date:
+          type: string
+        time:
+          type: string
+        venue:
+          type: string
+        eventType:
+          type: string
+        status:
+          type: string
+          enum: [pendiente, confirmado, completado, cancelado]
+        totalAmount:
+          type: number
+        advanceAmount:
+          type: number
+        notes:
+          type: string
+          nullable: true
+        musicians:
+          type: array
+          items:
+            $ref: "#/components/schemas/EventMusician"
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - date
+        - time
+        - venue
+        - eventType
+        - status
+        - totalAmount
+        - advanceAmount
+        - createdAt
+
+    CreateEvent:
+      type: object
+      properties:
+        title:
+          type: string
+        clientId:
+          type: integer
+          nullable: true
+        date:
+          type: string
+        time:
+          type: string
+        venue:
+          type: string
+        eventType:
+          type: string
+        status:
+          type: string
+          enum: [pendiente, confirmado, completado, cancelado]
+        totalAmount:
+          type: number
+        advanceAmount:
+          type: number
+        notes:
+          type: string
+          nullable: true
+        musicianIds:
+          type: array
+          items:
+            type: integer
+      required:
+        - title
+        - date
+        - time
+        - venue
+        - eventType
+        - status
+        - totalAmount
+        - advanceAmount
+
+    EventMusician:
+      type: object
+      properties:
+        id:
+          type: integer
+        eventId:
+          type: integer
+        musicianId:
+          type: integer
+        musicianName:
+          type: string
+        instruments:
+          type: string
+        fee:
+          type: number
+          nullable: true
+      required:
+        - id
+        - eventId
+        - musicianId
+        - musicianName
+        - instruments
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        eventId:
+          type: integer
+        eventTitle:
+          type: string
+          nullable: true
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [anticipo, pago_total, pago_parcial]
+        method:
+          type: string
+          enum: [efectivo, transferencia, cheque, otro]
+        date:
+          type: string
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - eventId
+        - amount
+        - type
+        - method
+        - date
+        - createdAt
+
+    CreatePayment:
+      type: object
+      properties:
+        eventId:
+          type: integer
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [anticipo, pago_total, pago_parcial]
+        method:
+          type: string
+          enum: [efectivo, transferencia, cheque, otro]
+        date:
+          type: string
+        notes:
+          type: string
+          nullable: true
+      required:
+        - eventId
+        - amount
+        - type
+        - method
+        - date
+
+    IncomeDataPoint:
+      type: object
+      properties:
+        label:
+          type: string
+        amount:
+          type: number
+        count:
+          type: integer
+      required:
+        - label
+        - amount
+        - count
+
+    IncomeReport:
+      type: object
+      properties:
+        total:
+          type: number
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/IncomeDataPoint"
+        startDate:
+          type: string
+          nullable: true
+        endDate:
+          type: string
+          nullable: true
+      required:
+        - total
+        - data
+
+    ReportSummary:
+      type: object
+      properties:
+        totalEvents:
+          type: integer
+        upcomingEvents:
+          type: integer
+        totalClients:
+          type: integer
+        totalMusicians:
+          type: integer
+        totalIncome:
+          type: number
+        pendingPayments:
+          type: number
+        eventsThisMonth:
+          type: integer
+        incomeThisMonth:
+          type: number
+      required:
+        - totalEvents
+        - upcomingEvents
+        - totalClients
+        - totalMusicians
+        - totalIncome
+        - pendingPayments
+        - eventsThisMonth
+        - incomeThisMonth
