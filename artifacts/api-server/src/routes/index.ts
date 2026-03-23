@@ -5,9 +5,11 @@ import musiciansRouter from "./musicians";
 import eventsRouter from "./events";
 import paymentsRouter from "./payments";
 import reportsRouter from "./reports";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
+router.use(authRouter);
 router.use(healthRouter);
 router.use(clientsRouter);
 router.use(musiciansRouter);
