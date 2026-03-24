@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useQuery } from "@tanstack/react-query";
 
-import { useGetEvents } from "@workspace/api-client-react";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -28,31 +28,55 @@ const TYPE_LABELS: Record<string, string> = {
   pago_total: "Pago Total",
 };
 
+function useClientPayments(clientId: number | null | undefined) {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  const baseUrl = domain ? `https://${domain}` : "";
+
+  return useQuery({
+    queryKey: ["clientPayments", clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const res = await fetch(`${baseUrl}/api/payments?clientId=${clientId}`);
+      if (!res.ok) throw new Error("Error al cargar pagos");
+      return res.json() as Promise<any[]>;
+    },
+  });
+}
+
+function useClientEvents(clientId: number | null | undefined) {
+  const domain = process.env.EXPO_PUBLIC_DOMAIN;
+  const baseUrl = domain ? `https://${domain}` : "";
+
+  return useQuery({
+    queryKey: ["clientEvents", clientId],
+    enabled: !!clientId,
+    queryFn: async () => {
+      const res = await fetch(`${baseUrl}/api/events`);
+      if (!res.ok) throw new Error("Error al cargar eventos");
+      const all = await res.json() as any[];
+      return all.filter((e) => e.clientId === clientId);
+    },
+  });
+}
+
 export default function MyPaymentsScreen() {
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
-  const { data: allEvents = [], isLoading } = useGetEvents({});
+  const { data: payments = [], isLoading: paymentsLoading } = useClientPayments(user?.clientId);
+  const { data: myEvents = [], isLoading: eventsLoading } = useClientEvents(user?.clientId);
 
-  const myEvents = useMemo(
-    () => allEvents.filter((e) => e.clientId === user?.clientId),
-    [allEvents, user]
+  const isLoading = paymentsLoading || eventsLoading;
+
+  const sortedPayments = useMemo(
+    () => [...payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    [payments]
   );
 
-  const paymentsWithEvent = useMemo(() => {
-    const result: Array<{ payment: any; event: any }> = [];
-    for (const e of myEvents) {
-      for (const p of (e.payments ?? [])) {
-        result.push({ payment: p, event: e });
-      }
-    }
-    return result.sort(
-      (a, b) => new Date(b.payment.date).getTime() - new Date(a.payment.date).getTime()
-    );
-  }, [myEvents]);
+  const totalPaid = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount ?? "0"), 0);
+  const totalOwed = myEvents.reduce((sum: number, e: any) => sum + parseFloat(e.totalAmount ?? "0"), 0);
+  const pending = Math.max(0, totalOwed - totalPaid);
 
-  const totalPaid = paymentsWithEvent.reduce((sum, { payment }) => sum + parseFloat(payment.amount ?? "0"), 0);
-  const totalOwed = myEvents.reduce((sum, e) => sum + parseFloat(e.totalAmount ?? "0"), 0);
-  const pending = totalOwed - totalPaid;
+  const firstOpenEvent = myEvents.find((e: any) => e.status !== "cancelado");
 
   if (isLoading) {
     return (
@@ -83,15 +107,15 @@ export default function MyPaymentsScreen() {
         </View>
       </View>
 
-      {pending > 0 && myEvents.length > 0 && (
+      {pending > 0 && firstOpenEvent && (
         <Pressable
           style={styles.payBtn}
           onPress={() =>
             router.push({
               pathname: "/payments/create",
               params: {
-                eventId: String(myEvents[0]?.id),
-                eventTitle: myEvents[0]?.title,
+                eventId: String(firstOpenEvent.id),
+                eventTitle: firstOpenEvent.title,
               },
             })
           }
@@ -101,11 +125,11 @@ export default function MyPaymentsScreen() {
         </Pressable>
       )}
 
-      <Text style={styles.sectionTitle}>Historial</Text>
+      <Text style={styles.sectionTitle}>Historial ({sortedPayments.length})</Text>
 
       <FlatList
-        data={paymentsWithEvent}
-        keyExtractor={(item) => String(item.payment.id)}
+        data={sortedPayments}
+        keyExtractor={(item: any) => String(item.id)}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 100 }}
         ListEmptyComponent={
           <View style={styles.emptyState}>
@@ -113,22 +137,24 @@ export default function MyPaymentsScreen() {
             <Text style={styles.emptyText}>No hay pagos registrados</Text>
           </View>
         }
-        renderItem={({ item: { payment, event } }) => (
+        renderItem={({ item }) => (
           <View style={styles.paymentCard}>
             <View style={styles.paymentTop}>
               <View style={styles.paymentTypeChip}>
-                <Text style={styles.paymentTypeText}>{TYPE_LABELS[payment.type] ?? payment.type}</Text>
+                <Text style={styles.paymentTypeText}>{TYPE_LABELS[item.type] ?? item.type}</Text>
               </View>
-              <Text style={styles.paymentDate}>{payment.date}</Text>
+              <Text style={styles.paymentDate}>{item.date}</Text>
             </View>
-            <Text style={styles.paymentEvent} numberOfLines={1}>{event.title}</Text>
+            {item.eventTitle && (
+              <Text style={styles.paymentEvent} numberOfLines={1}>{item.eventTitle}</Text>
+            )}
             <View style={styles.paymentBottom}>
               <View style={styles.methodRow}>
                 <Feather name="credit-card" size={13} color={Colors.textSecondary} />
-                <Text style={styles.paymentMethod}>{METHOD_LABELS[payment.method] ?? payment.method}</Text>
+                <Text style={styles.paymentMethod}>{METHOD_LABELS[item.method] ?? item.method}</Text>
               </View>
               <Text style={styles.paymentAmount}>
-                ${parseFloat(payment.amount ?? "0").toLocaleString("es-MX")}
+                ${parseFloat(item.amount ?? "0").toLocaleString("es-MX")}
               </Text>
             </View>
           </View>

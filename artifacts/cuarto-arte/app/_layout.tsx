@@ -6,7 +6,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Redirect, Stack } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -33,53 +33,71 @@ const queryClient = new QueryClient({
   },
 });
 
-function RootLayoutNav() {
+function AuthGuard() {
   const { user, isLoading } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
 
-  if (isLoading) return null;
-  if (!user) return <Redirect href="/login" />;
+  useEffect(() => {
+    if (isLoading) return;
 
+    const inLogin = segments[0] === "login";
+
+    if (!user && !inLogin) {
+      router.replace("/login");
+    } else if (user && inLogin) {
+      router.replace("/(tabs)");
+    }
+  }, [user, isLoading, segments]);
+
+  return null;
+}
+
+function RootLayoutNav() {
   return (
-    <Stack
-      screenOptions={{
-        headerBackTitle: "Atrás",
-        headerStyle: { backgroundColor: Colors.surface },
-        headerTintColor: Colors.textPrimary,
-        headerShadowVisible: false,
-        contentStyle: { backgroundColor: Colors.dark },
-      }}
-    >
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen
-        name="events/[id]"
-        options={{ title: "Evento", headerShown: true }}
-      />
-      <Stack.Screen
-        name="events/create"
-        options={{ title: "Nuevo Evento", headerShown: true, presentation: "modal" }}
-      />
-      <Stack.Screen
-        name="clients/[id]"
-        options={{ title: "Cliente", headerShown: true }}
-      />
-      <Stack.Screen
-        name="clients/create"
-        options={{ title: "Nuevo Cliente", headerShown: true, presentation: "modal" }}
-      />
-      <Stack.Screen
-        name="musicians/[id]"
-        options={{ title: "Músico", headerShown: true }}
-      />
-      <Stack.Screen
-        name="musicians/create"
-        options={{ title: "Nuevo Músico", headerShown: true, presentation: "modal" }}
-      />
-      <Stack.Screen
-        name="payments/create"
-        options={{ title: "Registrar Pago", headerShown: true, presentation: "modal" }}
-      />
-    </Stack>
+    <>
+      <AuthGuard />
+      <Stack
+        screenOptions={{
+          headerBackTitle: "Atrás",
+          headerStyle: { backgroundColor: Colors.surface },
+          headerTintColor: Colors.textPrimary,
+          headerShadowVisible: false,
+          contentStyle: { backgroundColor: Colors.dark },
+        }}
+      >
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="events/[id]"
+          options={{ title: "Evento", headerShown: true }}
+        />
+        <Stack.Screen
+          name="events/create"
+          options={{ title: "Nuevo Evento", headerShown: true, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="clients/[id]"
+          options={{ title: "Cliente", headerShown: true }}
+        />
+        <Stack.Screen
+          name="clients/create"
+          options={{ title: "Nuevo Cliente", headerShown: true, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="musicians/[id]"
+          options={{ title: "Músico", headerShown: true }}
+        />
+        <Stack.Screen
+          name="musicians/create"
+          options={{ title: "Nuevo Músico", headerShown: true, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="payments/create"
+          options={{ title: "Registrar Pago", headerShown: true, presentation: "modal" }}
+        />
+      </Stack>
+    </>
   );
 }
 

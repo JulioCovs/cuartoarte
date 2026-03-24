@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { setAuthTokenGetter } from "@workspace/api-client-react";
 
 export interface AuthUser {
   id: number;
@@ -23,6 +24,10 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const TOKEN_KEY = "cuartoarte_token";
 const USER_KEY = "cuartoarte_user";
 
+let _currentToken: string | null = null;
+
+setAuthTokenGetter(() => _currentToken);
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
@@ -31,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     AsyncStorage.multiGet([TOKEN_KEY, USER_KEY]).then(([[, savedToken], [, savedUser]]) => {
       if (savedToken && savedUser) {
+        _currentToken = savedToken;
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
       }
@@ -55,12 +61,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       [TOKEN_KEY, newToken],
       [USER_KEY, JSON.stringify(newUser)],
     ]);
+    _currentToken = newToken;
     setToken(newToken);
     setUser(newUser);
   }, []);
 
   const logout = useCallback(() => {
     AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+    _currentToken = null;
     setToken(null);
     setUser(null);
   }, []);

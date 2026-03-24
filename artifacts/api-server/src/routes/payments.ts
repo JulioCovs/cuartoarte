@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db, paymentsTable, eventsTable } from "@workspace/db";
-import { eq, and, gte, lte } from "drizzle-orm";
+import { eq, and, gte, lte, inArray } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -15,7 +15,27 @@ function formatPayment(payment: typeof paymentsTable.$inferSelect, eventTitle: s
 
 router.get("/payments", async (req, res) => {
   try {
-    const { eventId, startDate, endDate } = req.query;
+    const { eventId, startDate, endDate, clientId } = req.query;
+
+    if (clientId) {
+      const clientEvents = await db
+        .select({ id: eventsTable.id, title: eventsTable.title })
+        .from(eventsTable)
+        .where(eq(eventsTable.clientId, parseInt(clientId as string)));
+      if (clientEvents.length === 0) {
+        res.json([]);
+        return;
+      }
+      const eventIds = clientEvents.map((e) => e.id);
+      const eventMap = new Map(clientEvents.map((e) => [e.id, e.title]));
+      const payments = await db
+        .select()
+        .from(paymentsTable)
+        .where(inArray(paymentsTable.eventId, eventIds));
+      res.json(payments.map((p) => formatPayment(p, eventMap.get(p.eventId) ?? null)));
+      return;
+    }
+
     let query = db.select().from(paymentsTable).$dynamic();
     const conditions = [];
     if (eventId) conditions.push(eq(paymentsTable.eventId, parseInt(eventId as string)));

@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useGetReportSummary, useGetEvents } from "@workspace/api-client-react";
 import Colors from "@/constants/colors";
+import { useAuth } from "@/contexts/AuthContext";
 
 function StatCard({ label, value, icon, color }: { label: string; value: string; icon: string; color: string }) {
   return (
@@ -53,6 +54,14 @@ function EventRow({ event }: { event: any }) {
 }
 
 export default function HomeScreen() {
+  const { user } = useAuth();
+  if (user && user.role !== "admin") {
+    return <Redirect href="/(tabs)/my-events" />;
+  }
+  return <AdminHomeContent />;
+}
+
+function AdminHomeContent() {
   const insets = useSafeAreaInsets();
   const { data: summary, isLoading: summaryLoading } = useGetReportSummary();
   const { data: events, isLoading: eventsLoading } = useGetEvents({ status: "confirmado" });
