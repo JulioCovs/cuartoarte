@@ -11,7 +11,6 @@ export const clientsTable = pgTable("clients", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
 export const insertClientSchema = createInsertSchema(clientsTable).omit({ id: true, createdAt: true });
 export type InsertClient = z.infer<typeof insertClientSchema>;
 export type Client = typeof clientsTable.$inferSelect;
@@ -27,7 +26,6 @@ export const musiciansTable = pgTable("musicians", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
 export const insertMusicianSchema = createInsertSchema(musiciansTable).omit({ id: true, createdAt: true });
 export type InsertMusician = z.infer<typeof insertMusicianSchema>;
 export type Musician = typeof musiciansTable.$inferSelect;
@@ -46,7 +44,6 @@ export const eventsTable = pgTable("events", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
 export const insertEventSchema = createInsertSchema(eventsTable).omit({ id: true, createdAt: true });
 export type InsertEvent = z.infer<typeof insertEventSchema>;
 export type Event = typeof eventsTable.$inferSelect;
@@ -57,7 +54,6 @@ export const eventMusiciansTable = pgTable("event_musicians", {
   musicianId: integer("musician_id").references(() => musiciansTable.id, { onDelete: "cascade" }).notNull(),
   fee: numeric("fee", { precision: 10, scale: 2 }),
 });
-
 export const insertEventMusicianSchema = createInsertSchema(eventMusiciansTable).omit({ id: true });
 export type InsertEventMusician = z.infer<typeof insertEventMusicianSchema>;
 export type EventMusician = typeof eventMusiciansTable.$inferSelect;
@@ -72,7 +68,6 @@ export const paymentsTable = pgTable("payments", {
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
 export const insertPaymentSchema = createInsertSchema(paymentsTable).omit({ id: true, createdAt: true });
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof paymentsTable.$inferSelect;
@@ -87,7 +82,43 @@ export const usersTable = pgTable("users", {
   musicianId: integer("musician_id").references(() => musiciansTable.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
-
 export const insertUserSchema = createInsertSchema(usersTable).omit({ id: true, createdAt: true });
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof usersTable.$inferSelect;
+
+// ─── Booking Requests ───────────────────────────────────────────────────────
+// Estados: pending → (accepted | rejected) → confirmed | cancelled
+export const bookingRequestsTable = pgTable("booking_requests", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").references(() => clientsTable.id).notNull(),
+  musicianId: integer("musician_id").references(() => musiciansTable.id).notNull(),
+  requestedDate: text("requested_date").notNull(),
+  requestedTime: text("requested_time").notNull(),
+  venue: text("venue").notNull(),
+  eventType: text("event_type").notNull(),
+  notes: text("notes"),
+  status: text("status").notNull().default("pending"),
+  musicianResponse: text("musician_response"),
+  adminNotes: text("admin_notes"),
+  eventId: integer("event_id").references(() => eventsTable.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export const insertBookingRequestSchema = createInsertSchema(bookingRequestsTable).omit({ id: true, createdAt: true, updatedAt: true });
+export type InsertBookingRequest = z.infer<typeof insertBookingRequestSchema>;
+export type BookingRequest = typeof bookingRequestsTable.$inferSelect;
+
+// ─── Expenses ────────────────────────────────────────────────────────────────
+export const expensesTable = pgTable("expenses", {
+  id: serial("id").primaryKey(),
+  eventId: integer("event_id").references(() => eventsTable.id, { onDelete: "set null" }),
+  description: text("description").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  category: text("category").notNull().default("otro"),
+  date: text("date").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+export const insertExpenseSchema = createInsertSchema(expensesTable).omit({ id: true, createdAt: true });
+export type InsertExpense = z.infer<typeof insertExpenseSchema>;
+export type Expense = typeof expensesTable.$inferSelect;
