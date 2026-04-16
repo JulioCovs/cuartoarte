@@ -124,9 +124,18 @@ export type PaymentMethod = (typeof PaymentMethod)[keyof typeof PaymentMethod];
 
 export const PaymentMethod = {
   efectivo: "efectivo",
+  tarjeta: "tarjeta",
   transferencia: "transferencia",
   cheque: "cheque",
   otro: "otro",
+} as const;
+
+export type PaymentStatus = (typeof PaymentStatus)[keyof typeof PaymentStatus];
+
+export const PaymentStatus = {
+  approved: "approved",
+  pending_approval: "pending_approval",
+  rejected: "rejected",
 } as const;
 
 export interface Payment {
@@ -138,6 +147,8 @@ export interface Payment {
   method: PaymentMethod;
   date: string;
   notes?: string | null;
+  status: PaymentStatus;
+  stripeSessionId?: string | null;
   createdAt: string;
 }
 
@@ -155,6 +166,7 @@ export type CreatePaymentMethod =
 
 export const CreatePaymentMethod = {
   efectivo: "efectivo",
+  tarjeta: "tarjeta",
   transferencia: "transferencia",
   cheque: "cheque",
   otro: "otro",

@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const METHOD_LABELS: Record<string, string> = {
   efectivo: "Efectivo",
+  tarjeta: "Tarjeta",
   transferencia: "Transferencia",
   cheque: "Cheque",
   otro: "Otro",
@@ -72,9 +73,13 @@ export default function MyPaymentsScreen() {
     [payments]
   );
 
-  const totalPaid = payments.reduce((sum: number, p: any) => sum + parseFloat(p.amount ?? "0"), 0);
+  // Only approved payments count toward the paid balance
+  const totalPaid = payments
+    .filter((p: any) => p.status === "approved" || !p.status)
+    .reduce((sum: number, p: any) => sum + parseFloat(p.amount ?? "0"), 0);
   const totalOwed = myEvents.reduce((sum: number, e: any) => sum + parseFloat(e.totalAmount ?? "0"), 0);
-  const pending = Math.max(0, totalOwed - totalPaid);
+  const remaining = Math.max(0, totalOwed - totalPaid);
+  const pendingApproval = payments.filter((p: any) => p.status === "pending_approval").length;
 
   const firstOpenEvent = myEvents.find((e: any) => e.status !== "cancelado");
 
@@ -100,14 +105,24 @@ export default function MyPaymentsScreen() {
           </Text>
         </View>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Pendiente</Text>
-          <Text style={[styles.summaryValue, { color: pending > 0 ? "#F5A623" : "#4CAF50" }]}>
-            ${pending.toLocaleString("es-MX")}
+          <Text style={styles.summaryLabel}>Por Pagar</Text>
+          <Text style={[styles.summaryValue, { color: remaining > 0 ? "#F5A623" : "#4CAF50" }]}>
+            ${remaining.toLocaleString("es-MX")}
           </Text>
         </View>
       </View>
 
-      {pending > 0 && firstOpenEvent && (
+      {/* Pending approval notice */}
+      {pendingApproval > 0 && (
+        <View style={styles.pendingNotice}>
+          <Feather name="clock" size={14} color={Colors.warning} />
+          <Text style={styles.pendingNoticeText}>
+            {pendingApproval} pago{pendingApproval > 1 ? "s" : ""} en efectivo pendiente{pendingApproval > 1 ? "s" : ""} de confirmación por el admin
+          </Text>
+        </View>
+      )}
+
+      {remaining > 0 && firstOpenEvent && (
         <Pressable
           style={styles.payBtn}
           onPress={() =>
@@ -116,6 +131,8 @@ export default function MyPaymentsScreen() {
               params: {
                 eventId: String(firstOpenEvent.id),
                 eventTitle: firstOpenEvent.title,
+                eventTotal: String(firstOpenEvent.totalAmount ?? 0),
+                totalPaid: String(totalPaid),
               },
             })
           }
@@ -137,28 +154,52 @@ export default function MyPaymentsScreen() {
             <Text style={styles.emptyText}>No hay pagos registrados</Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.paymentCard}>
-            <View style={styles.paymentTop}>
-              <View style={styles.paymentTypeChip}>
-                <Text style={styles.paymentTypeText}>{TYPE_LABELS[item.type] ?? item.type}</Text>
+        renderItem={({ item }) => {
+          const isPending = item.status === "pending_approval";
+          const isRejected = item.status === "rejected";
+          return (
+            <View style={[
+              styles.paymentCard,
+              isPending && { borderColor: Colors.warning + "66" },
+              isRejected && { borderColor: Colors.error + "44", opacity: 0.7 },
+            ]}>
+              <View style={styles.paymentTop}>
+                <View style={styles.paymentTypeChip}>
+                  <Text style={styles.paymentTypeText}>{TYPE_LABELS[item.type] ?? item.type}</Text>
+                </View>
+                {isPending && (
+                  <View style={styles.statusChip}>
+                    <Feather name="clock" size={10} color={Colors.warning} />
+                    <Text style={[styles.statusChipText, { color: Colors.warning }]}>Por confirmar</Text>
+                  </View>
+                )}
+                {isRejected && (
+                  <View style={[styles.statusChip, { backgroundColor: Colors.error + "22" }]}>
+                    <Feather name="x-circle" size={10} color={Colors.error} />
+                    <Text style={[styles.statusChipText, { color: Colors.error }]}>Rechazado</Text>
+                  </View>
+                )}
+                <Text style={styles.paymentDate}>{item.date}</Text>
               </View>
-              <Text style={styles.paymentDate}>{item.date}</Text>
-            </View>
-            {item.eventTitle && (
-              <Text style={styles.paymentEvent} numberOfLines={1}>{item.eventTitle}</Text>
-            )}
-            <View style={styles.paymentBottom}>
-              <View style={styles.methodRow}>
-                <Feather name="credit-card" size={13} color={Colors.textSecondary} />
-                <Text style={styles.paymentMethod}>{METHOD_LABELS[item.method] ?? item.method}</Text>
+              {item.eventTitle && (
+                <Text style={styles.paymentEvent} numberOfLines={1}>{item.eventTitle}</Text>
+              )}
+              <View style={styles.paymentBottom}>
+                <View style={styles.methodRow}>
+                  <Feather name="credit-card" size={13} color={Colors.textSecondary} />
+                  <Text style={styles.paymentMethod}>{METHOD_LABELS[item.method] ?? item.method}</Text>
+                </View>
+                <Text style={[
+                  styles.paymentAmount,
+                  isPending && { color: Colors.warning },
+                  isRejected && { color: Colors.error },
+                ]}>
+                  ${parseFloat(item.amount ?? "0").toLocaleString("es-MX")}
+                </Text>
               </View>
-              <Text style={styles.paymentAmount}>
-                ${parseFloat(item.amount ?? "0").toLocaleString("es-MX")}
-              </Text>
             </View>
-          </View>
-        )}
+          );
+        }}
       />
     </View>
   );
@@ -229,4 +270,27 @@ const styles = StyleSheet.create({
   methodRow: { flexDirection: "row", alignItems: "center", gap: 5 },
   paymentMethod: { fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary },
   paymentAmount: { fontFamily: "Inter_700Bold", fontSize: 16, color: Colors.primary },
+  pendingNotice: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: Colors.warning + "18",
+    borderRadius: 10,
+    padding: 12,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: Colors.warning + "44",
+  },
+  pendingNoticeText: { fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.warning, flex: 1 },
+  statusChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: Colors.warning + "22",
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  statusChipText: { fontFamily: "Inter_500Medium", fontSize: 10 },
 });

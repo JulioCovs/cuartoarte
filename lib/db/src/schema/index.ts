@@ -66,6 +66,9 @@ export const paymentsTable = pgTable("payments", {
   method: text("method").notNull(),
   date: text("date").notNull(),
   notes: text("notes"),
+  // 'approved' = confirmed payment, 'pending_approval' = cash reported by client (awaiting admin), 'rejected' = rejected
+  status: text("status").notNull().default("approved"),
+  stripeSessionId: text("stripe_session_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 export const insertPaymentSchema = createInsertSchema(paymentsTable).omit({ id: true, createdAt: true });

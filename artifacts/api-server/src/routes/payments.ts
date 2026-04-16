@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db, paymentsTable, eventsTable } from "@workspace/db";
-import { eq, and, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, sum } from "drizzle-orm";
+import { requireAuth } from "../middleware/authMiddleware";
 
 const router: IRouter = Router();
 
@@ -15,7 +16,7 @@ function formatPayment(payment: typeof paymentsTable.$inferSelect, eventTitle: s
 
 router.get("/payments", async (req, res) => {
   try {
-    const { eventId, startDate, endDate, clientId } = req.query;
+    const { eventId, startDate, endDate, clientId, status } = req.query;
 
     if (clientId) {
       const clientEvents = await db
@@ -41,6 +42,7 @@ router.get("/payments", async (req, res) => {
     if (eventId) conditions.push(eq(paymentsTable.eventId, parseInt(eventId as string)));
     if (startDate) conditions.push(gte(paymentsTable.date, startDate as string));
     if (endDate) conditions.push(lte(paymentsTable.date, endDate as string));
+    if (status) conditions.push(eq(paymentsTable.status, status as string));
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
@@ -56,12 +58,41 @@ router.get("/payments", async (req, res) => {
   }
 });
 
-router.post("/payments", async (req, res) => {
+// GET remaining balance for an event (based on approved payments)
+router.get("/payments/remaining/:eventId", async (req, res) => {
+  try {
+    const eventId = parseInt(req.params.eventId);
+    const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, eventId));
+    if (!event) return res.status(404).json({ error: "Evento no encontrado" });
+
+    const approvedPayments = await db
+      .select()
+      .from(paymentsTable)
+      .where(and(eq(paymentsTable.eventId, eventId), eq(paymentsTable.status, "approved")));
+
+    const totalPaid = approvedPayments.reduce((acc, p) => acc + parseFloat(p.amount), 0);
+    const total = parseFloat(event.totalAmount);
+    const remaining = Math.max(0, total - totalPaid);
+
+    res.json({ total, totalPaid, remaining });
+  } catch (err) {
+    req.log.error({ err }, "Error fetching remaining balance");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/payments", requireAuth, async (req, res) => {
   try {
     const { eventId, amount, type, method, date, notes } = req.body;
     if (!eventId || !amount || !type || !method || !date) {
       return res.status(400).json({ error: "Required fields missing" });
     }
+
+    // Cash payments from clients require admin approval; everything else is auto-approved
+    const userRole = req.user?.role ?? "admin";
+    const isPendingApproval = method === "efectivo" && userRole === "client";
+    const status = isPendingApproval ? "pending_approval" : "approved";
+
     const [payment] = await db.insert(paymentsTable).values({
       eventId,
       amount: String(amount),
@@ -69,11 +100,54 @@ router.post("/payments", async (req, res) => {
       method,
       date,
       notes,
+      status,
     }).returning();
     const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, eventId));
     res.status(201).json(formatPayment(payment, event?.title ?? null));
   } catch (err) {
     req.log.error({ err }, "Error creating payment");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: approve a pending cash payment
+router.patch("/payments/:id/approve", requireAuth, async (req, res) => {
+  try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Solo el admin puede aprobar pagos" });
+    }
+    const id = parseInt(req.params.id);
+    const [payment] = await db
+      .update(paymentsTable)
+      .set({ status: "approved" })
+      .where(eq(paymentsTable.id, id))
+      .returning();
+    if (!payment) return res.status(404).json({ error: "Pago no encontrado" });
+    const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, payment.eventId));
+    res.json(formatPayment(payment, event?.title ?? null));
+  } catch (err) {
+    req.log.error({ err }, "Error approving payment");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Admin: reject a pending cash payment
+router.patch("/payments/:id/reject", requireAuth, async (req, res) => {
+  try {
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({ error: "Solo el admin puede rechazar pagos" });
+    }
+    const id = parseInt(req.params.id);
+    const [payment] = await db
+      .update(paymentsTable)
+      .set({ status: "rejected" })
+      .where(eq(paymentsTable.id, id))
+      .returning();
+    if (!payment) return res.status(404).json({ error: "Pago no encontrado" });
+    const [event] = await db.select().from(eventsTable).where(eq(eventsTable.id, payment.eventId));
+    res.json(formatPayment(payment, event?.title ?? null));
+  } catch (err) {
+    req.log.error({ err }, "Error rejecting payment");
     res.status(500).json({ error: "Internal server error" });
   }
 });
