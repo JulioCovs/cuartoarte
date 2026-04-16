@@ -37,9 +37,16 @@ artifacts-monorepo/
 
 ## App Features (Cuarto Arte)
 
+### Autenticación (Login, Register, Forgot Password)
+- **Login**: Correo/contraseña + acceso rápido demo; links a "Crear Cuenta" y "Olvidé mi contraseña"
+- **Registro**: Formulario con selector de rol (Cliente auto-aprobado / Músico requiere aprobación admin); WhatsApp al admin +528114845398 al registrarse como músico
+- **Olvidé contraseña**: Ingresa email + nueva contraseña directamente; botón WhatsApp al admin
+- **Control de acceso**: Músicos con `approvalStatus = 'pending'` no pueden iniciar sesión hasta ser aprobados
+
 ### Admin
-- **Inicio**: Dashboard con KPIs, eventos próximos, acciones rápidas
-- **Solicitudes**: Lista de contrataciones filtradas por estado (pendiente, aceptada, confirmada, rechazada); formulario para confirmar solicitudes aceptadas y crear evento automáticamente
+- **Inicio**: Dashboard con KPIs, eventos próximos, acciones rápidas (incl. "Aprobar" músicos)
+- **Músicos Pendientes**: Lista de solicitudes de músicos pendientes; puede aprobar o rechazar cada uno
+- **Solicitudes**: Lista de contrataciones filtradas por estado (pendiente, aceptada, confirmada, rechazada); formulario para confirmar solicitudes aceptadas; al confirmar muestra botón WhatsApp +528114845398 con mensaje del evento
 - **Eventos**: Lista con filtros, creación/edición con asignación de músicos y clientes
 - **Clientes**: Catálogo con búsqueda, perfil con historial de eventos
 - **Músicos**: Catálogo con búsqueda por instrumento, perfil con eventos asignados

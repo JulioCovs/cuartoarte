@@ -37,6 +37,11 @@ export async function setupDb() {
     )
   `);
 
+  // Approval status column (migration for existing deployments)
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS approval_status TEXT NOT NULL DEFAULT 'active'
+  `);
+
   // Expenses table
   await pool.query(`
     CREATE TABLE IF NOT EXISTS expenses (

@@ -78,6 +78,7 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   name: text("name").notNull(),
   role: text("role").notNull(),
+  approvalStatus: text("approval_status").notNull().default("active"),
   clientId: integer("client_id").references(() => clientsTable.id),
   musicianId: integer("musician_id").references(() => musiciansTable.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -67,9 +67,23 @@ export default function BookingDetailScreen() {
       if (!res.ok) throw new Error("Error al confirmar");
       qc.invalidateQueries({ queryKey: ["adminBookings"] });
       qc.invalidateQueries({ queryKey: ["getEvents"] });
-      Alert.alert("✓ Evento creado", "El evento ha sido creado y confirmado exitosamente.", [
-        { text: "OK", onPress: () => router.back() },
-      ]);
+      const clientMsg = encodeURIComponent(`Hola, confirmamos tu evento *${title.trim()}*. El pago total es de $${parseFloat(price).toLocaleString("es-MX")} MXN. Nos comunicaremos con más detalles pronto. — Cuarto Arte`);
+      const waUrl = `https://wa.me/528114845398?text=${clientMsg}`;
+      Alert.alert(
+        "✓ Evento Confirmado",
+        `El evento "${title.trim()}" ha sido creado exitosamente.\n\n¿Deseas enviar notificación de WhatsApp al equipo?`,
+        [
+          { text: "Ahora no", style: "cancel", onPress: () => router.back() },
+          {
+            text: "Abrir WhatsApp",
+            onPress: async () => {
+              const { Linking } = await import("react-native");
+              Linking.openURL(waUrl);
+              router.back();
+            },
+          },
+        ]
+      );
     } catch {
       Alert.alert("Error", "No se pudo confirmar la solicitud");
     } finally {

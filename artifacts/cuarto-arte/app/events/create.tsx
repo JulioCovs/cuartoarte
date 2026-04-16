@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -12,7 +13,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
@@ -173,11 +173,11 @@ export default function CreateEventScreen() {
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom + 16;
 
   return (
-    <KeyboardAwareScrollView
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+    <ScrollView
       style={styles.container}
       contentContainerStyle={{ padding: 16, paddingBottom: bottomPad + 80 }}
       keyboardShouldPersistTaps="handled"
-      bottomOffset={80}
     >
       <Field label="Nombre del evento *">
         <Input value={title} onChangeText={setTitle} placeholder="Boda García-López" />
@@ -280,7 +280,8 @@ export default function CreateEventScreen() {
           </>
         )}
       </Pressable>
-    </KeyboardAwareScrollView>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 

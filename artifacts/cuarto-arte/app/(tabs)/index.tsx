@@ -206,8 +206,25 @@ function AdminHomeContent() {
             <Feather name="dollar-sign" size={22} color={Colors.warning} />
             <Text style={styles.quickActionText}>Pago</Text>
           </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.quickAction, pressed && { opacity: 0.7 }]}
+            onPress={() => router.push("/admin/pending-users")}
+          >
+            <Feather name="user-check" size={22} color="#9C27B0" />
+            <Text style={styles.quickActionText}>Aprobar</Text>
+          </Pressable>
         </View>
       </View>
+
+      {/* Pending musicians banner */}
+      <Pressable style={styles.pendingMusiciansCard} onPress={() => router.push("/admin/pending-users")}>
+        <Feather name="clock" size={18} color={Colors.primary} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.pendingMusiciansTitle}>Músicos Pendientes de Aprobación</Text>
+          <Text style={styles.pendingMusiciansSubtitle}>Revisa y aprueba solicitudes de nuevos músicos</Text>
+        </View>
+        <Feather name="chevron-right" size={16} color={Colors.primary} />
+      </Pressable>
     </ScrollView>
   );
 }
@@ -402,5 +419,29 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     fontSize: 11,
     color: Colors.textSecondary,
+  },
+  pendingMusiciansCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginHorizontal: 20,
+    marginTop: 8,
+    marginBottom: 8,
+    backgroundColor: Colors.surface,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.primary + "40",
+  },
+  pendingMusiciansTitle: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  pendingMusiciansSubtitle: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });

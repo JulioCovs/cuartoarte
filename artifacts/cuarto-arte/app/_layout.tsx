@@ -108,6 +108,18 @@ function RootLayoutNav() {
           name="expenses/create"
           options={{ title: "Registrar Gasto", headerShown: true, presentation: "modal" }}
         />
+        <Stack.Screen
+          name="register"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="forgot-password"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="admin/pending-users"
+          options={{ title: "Músicos Pendientes", headerShown: true }}
+        />
       </Stack>
     </>
   );
