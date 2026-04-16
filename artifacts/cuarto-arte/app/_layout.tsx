@@ -41,11 +41,12 @@ function AuthGuard() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inLogin = segments[0] === "login";
+    const publicRoutes = ["login", "register", "forgot-password"];
+    const inPublicRoute = publicRoutes.includes(segments[0] as string);
 
-    if (!user && !inLogin) {
+    if (!user && !inPublicRoute) {
       router.replace("/login");
-    } else if (user && inLogin) {
+    } else if (user && inPublicRoute) {
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments]);

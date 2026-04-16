@@ -17,7 +17,7 @@ const INSTRUMENT_OPTIONS = [
 ];
 
 export default function RegisterScreen() {
-  const { login } = useAuth();
+  const { setSession } = useAuth();
   const insets = useSafeAreaInsets();
   const { role: roleParam } = useLocalSearchParams<{ role?: string }>();
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
@@ -73,11 +73,13 @@ export default function RegisterScreen() {
       }
 
       if (role === "client") {
-        await login(email.trim().toLowerCase(), password);
+        // Use the token returned directly from registration — no second login call needed
+        await setSession(data.token, data.user);
+        router.replace("/(tabs)");
       } else {
         Alert.alert(
           "¡Solicitud enviada!",
-          "Tu solicitud fue enviada al administrador. Recibirás una respuesta pronto. Número de WhatsApp: +528114845398",
+          "Tu solicitud fue enviada al administrador. Recibirás una respuesta pronto.\n\nNúmero de WhatsApp: +528114845398",
           [{ text: "Entendido", onPress: () => router.replace("/login") }]
         );
       }

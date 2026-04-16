@@ -16,6 +16,7 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  setSession: (token: string, user: AuthUser) => Promise<void>;
   logout: () => void;
 }
 
@@ -66,6 +67,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(newUser);
   }, []);
 
+  const setSession = useCallback(async (newToken: string, newUser: AuthUser) => {
+    await AsyncStorage.multiSet([
+      [TOKEN_KEY, newToken],
+      [USER_KEY, JSON.stringify(newUser)],
+    ]);
+    _currentToken = newToken;
+    setToken(newToken);
+    setUser(newUser);
+  }, []);
+
   const logout = useCallback(() => {
     AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
     _currentToken = null;
@@ -74,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, setSession, logout }}>
       {children}
     </AuthContext.Provider>
   );
