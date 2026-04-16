@@ -12,10 +12,10 @@ import { useCreatePayment, useGetEvents } from "@workspace/api-client-react";
 import Colors from "@/constants/colors";
 
 const PAYMENT_TYPES = ["anticipo", "pago_parcial", "pago_total"];
-const PAYMENT_METHODS = ["efectivo", "transferencia", "cheque", "otro"];
+const PAYMENT_METHODS = ["efectivo", "tarjeta", "transferencia", "cheque", "otro"];
 const TYPE_LABELS: Record<string, string> = { anticipo: "Anticipo", pago_parcial: "Pago Parcial", pago_total: "Pago Total" };
-const METHOD_LABELS: Record<string, string> = { efectivo: "Efectivo", transferencia: "Transferencia", cheque: "Cheque", otro: "Otro" };
-const METHOD_ICONS: Record<string, string> = { efectivo: "dollar-sign", transferencia: "credit-card", cheque: "file-text", otro: "help-circle" };
+const METHOD_LABELS: Record<string, string> = { efectivo: "Efectivo", tarjeta: "Tarjeta", transferencia: "Transferencia", cheque: "Cheque", otro: "Otro" };
+const METHOD_ICONS: Record<string, string> = { efectivo: "dollar-sign", tarjeta: "credit-card", transferencia: "send", cheque: "file-text", otro: "help-circle" };
 
 export default function CreatePaymentScreen() {
   const { eventId: prefillEventId, eventTitle: prefillTitle } = useLocalSearchParams<{ eventId?: string; eventTitle?: string }>();
@@ -119,7 +119,7 @@ export default function CreatePaymentScreen() {
           <View style={styles.methodGrid}>
             {PAYMENT_METHODS.map(m => (
               <Pressable key={m} style={[styles.methodBtn, method === m && styles.methodBtnActive]} onPress={() => setMethod(m)}>
-                <Feather name={METHOD_ICONS[m] as any} size={18} color={method === m ? Colors.dark : Colors.textSecondary} />
+                <Feather name={METHOD_ICONS[m] as any} size={20} color={method === m ? Colors.dark : Colors.textSecondary} />
                 <Text style={[styles.methodText, method === m && styles.methodTextActive]}>{METHOD_LABELS[m]}</Text>
               </Pressable>
             ))}
@@ -168,10 +168,10 @@ const styles = StyleSheet.create({
   optionBtnActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   optionText: { fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.textSecondary },
   optionTextActive: { color: Colors.dark },
-  methodGrid: { flexDirection: "row", gap: 8 },
-  methodBtn: { flex: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 12, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
+  methodGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  methodBtn: { width: "30%", flexGrow: 1, alignItems: "center", gap: 6, paddingVertical: 12, borderRadius: 12, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   methodBtnActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  methodText: { fontFamily: "Inter_500Medium", fontSize: 11, color: Colors.textSecondary },
+  methodText: { fontFamily: "Inter_500Medium", fontSize: 12, color: Colors.textSecondary },
   methodTextActive: { color: Colors.dark },
   saveBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16 },
   saveBtnText: { fontFamily: "Inter_700Bold", fontSize: 16, color: Colors.dark },

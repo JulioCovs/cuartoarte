@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Linking, Platform, Pressable,
   ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -76,8 +76,7 @@ export default function BookingDetailScreen() {
           { text: "Ahora no", style: "cancel", onPress: () => router.back() },
           {
             text: "Abrir WhatsApp",
-            onPress: async () => {
-              const { Linking } = await import("react-native");
+            onPress: () => {
               Linking.openURL(waUrl);
               router.back();
             },
