@@ -96,6 +96,18 @@ function RootLayoutNav() {
           name="payments/create"
           options={{ title: "Registrar Pago", headerShown: true, presentation: "modal" }}
         />
+        <Stack.Screen
+          name="bookings/[id]"
+          options={{ title: "Solicitud de Contratación", headerShown: true }}
+        />
+        <Stack.Screen
+          name="bookings/request"
+          options={{ title: "Solicitar Músico", headerShown: true, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="expenses/create"
+          options={{ title: "Registrar Gasto", headerShown: true, presentation: "modal" }}
+        />
       </Stack>
     </>
   );
