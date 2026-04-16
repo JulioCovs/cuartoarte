@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
@@ -19,10 +19,11 @@ const INSTRUMENT_OPTIONS = [
 export default function RegisterScreen() {
   const { login } = useAuth();
   const insets = useSafeAreaInsets();
+  const { role: roleParam } = useLocalSearchParams<{ role?: string }>();
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   const baseUrl = domain ? `https://${domain}` : "";
 
-  const [role, setRole] = useState<"client" | "musician">("client");
+  const [role, setRole] = useState<"client" | "musician">(roleParam === "musician" ? "musician" : "client");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");

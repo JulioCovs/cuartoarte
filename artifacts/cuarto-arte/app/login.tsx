@@ -11,12 +11,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Colors from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 
-const DEMO_USERS = [
-  { email: "admin@cuartoarte.com", password: "admin123", label: "Administrador", icon: "shield" as const },
-  { email: "cliente@ejemplo.com", password: "cliente123", label: "Cliente", icon: "user" as const },
-  { email: "musico@ejemplo.com", password: "musico123", label: "Músico", icon: "music" as const },
-];
-
 export default function LoginScreen() {
   const { login } = useAuth();
   const insets = useSafeAreaInsets();
@@ -43,7 +37,7 @@ export default function LoginScreen() {
     <LinearGradient colors={["#0D0D0D", "#1A1209"]} style={{ flex: 1 }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
         <ScrollView
-          contentContainerStyle={[styles.container, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 24 }]}
+          contentContainerStyle={[styles.container, { paddingTop: insets.top + 40, paddingBottom: insets.bottom + 32 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
@@ -102,27 +96,34 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
-          {/* Register link */}
-          <View style={styles.registerSection}>
-            <Text style={styles.registerText}>¿Eres nuevo en Cuarto Arte?</Text>
-            <Pressable style={styles.registerBtn} onPress={() => router.push("/register")}>
-              <Feather name="user-plus" size={16} color={Colors.primary} />
-              <Text style={styles.registerBtnText}>Crear cuenta</Text>
-            </Pressable>
-          </View>
+          {/* New user section */}
+          <View style={styles.newUserSection}>
+            <Text style={styles.newUserTitle}>¿Eres nuevo en Cuarto Arte?</Text>
+            <Text style={styles.newUserSubtitle}>Crea tu cuenta como músico o cliente</Text>
+            <View style={styles.roleRow}>
+              <Pressable
+                style={styles.roleBtn}
+                onPress={() => router.push({ pathname: "/register", params: { role: "client" } })}
+              >
+                <View style={[styles.roleBtnIcon, { backgroundColor: Colors.info + "25" }]}>
+                  <Feather name="user" size={20} color={Colors.info} />
+                </View>
+                <Text style={styles.roleBtnTitle}>Soy Cliente</Text>
+                <Text style={styles.roleBtnDesc}>Contrata músicos para tus eventos</Text>
+                <Feather name="arrow-right" size={14} color={Colors.textSecondary} style={{ marginTop: 4 }} />
+              </Pressable>
 
-          {/* Demo access */}
-          <View style={styles.demoSection}>
-            <Text style={styles.demoTitle}>Acceso de prueba</Text>
-            <View style={styles.demoRow}>
-              {DEMO_USERS.map((u) => (
-                <Pressable key={u.email} style={styles.demoBtn} onPress={() => { setEmail(u.email); setPassword(u.password); }}>
-                  <View style={styles.demoBtnIconWrap}>
-                    <Feather name={u.icon} size={16} color={Colors.primary} />
-                  </View>
-                  <Text style={styles.demoBtnLabel}>{u.label}</Text>
-                </Pressable>
-              ))}
+              <Pressable
+                style={styles.roleBtn}
+                onPress={() => router.push({ pathname: "/register", params: { role: "musician" } })}
+              >
+                <View style={[styles.roleBtnIcon, { backgroundColor: Colors.primary + "25" }]}>
+                  <Feather name="music" size={20} color={Colors.primary} />
+                </View>
+                <Text style={styles.roleBtnTitle}>Soy Músico</Text>
+                <Text style={styles.roleBtnDesc}>Ofrece tus servicios musicales</Text>
+                <Feather name="arrow-right" size={14} color={Colors.textSecondary} style={{ marginTop: 4 }} />
+              </Pressable>
             </View>
           </View>
         </ScrollView>
@@ -132,12 +133,12 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 24, justifyContent: "center" },
+  container: { paddingHorizontal: 24 },
   header: { alignItems: "center", marginBottom: 32 },
   logoRing: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: Colors.primary, alignItems: "center", justifyContent: "center", marginBottom: 16, backgroundColor: Colors.surface },
   title: { fontFamily: "Inter_700Bold", fontSize: 32, color: Colors.textPrimary, letterSpacing: 1 },
   subtitle: { fontFamily: "Inter_400Regular", fontSize: 14, color: Colors.textSecondary, marginTop: 4 },
-  card: { backgroundColor: Colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: Colors.border, marginBottom: 16 },
+  card: { backgroundColor: Colors.surface, borderRadius: 20, padding: 24, borderWidth: 1, borderColor: Colors.border, marginBottom: 24 },
   cardTitle: { fontFamily: "Inter_600SemiBold", fontSize: 20, color: Colors.textPrimary, marginBottom: 20 },
   field: { marginBottom: 16 },
   labelRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 8 },
@@ -149,14 +150,16 @@ const styles = StyleSheet.create({
   eyeBtn: { padding: 8 },
   loginBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 16, marginTop: 4 },
   loginBtnText: { fontFamily: "Inter_700Bold", fontSize: 16, color: Colors.dark },
-  registerSection: { alignItems: "center", marginBottom: 20, gap: 10 },
-  registerText: { fontFamily: "Inter_400Regular", fontSize: 14, color: Colors.textSecondary },
-  registerBtn: { flexDirection: "row", alignItems: "center", gap: 8, backgroundColor: Colors.surface, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 12, borderWidth: 1, borderColor: Colors.primary + "50" },
-  registerBtnText: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.primary },
-  demoSection: { alignItems: "center" },
-  demoTitle: { fontFamily: "Inter_400Regular", fontSize: 12, color: Colors.textSecondary, marginBottom: 12 },
-  demoRow: { flexDirection: "row", gap: 12, width: "100%" },
-  demoBtn: { flex: 1, alignItems: "center", gap: 6, padding: 12, backgroundColor: Colors.surface, borderRadius: 12, borderWidth: 1, borderColor: Colors.border },
-  demoBtnIconWrap: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.primary + "20", alignItems: "center", justifyContent: "center" },
-  demoBtnLabel: { fontFamily: "Inter_500Medium", fontSize: 11, color: Colors.textPrimary },
+  newUserSection: { gap: 10 },
+  newUserTitle: { fontFamily: "Inter_600SemiBold", fontSize: 16, color: Colors.textPrimary, textAlign: "center" },
+  newUserSubtitle: { fontFamily: "Inter_400Regular", fontSize: 13, color: Colors.textSecondary, textAlign: "center" },
+  roleRow: { flexDirection: "row", gap: 12 },
+  roleBtn: {
+    flex: 1, alignItems: "center", gap: 6, padding: 16,
+    backgroundColor: Colors.surface, borderRadius: 16,
+    borderWidth: 1, borderColor: Colors.border,
+  },
+  roleBtnIcon: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center", marginBottom: 4 },
+  roleBtnTitle: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: Colors.textPrimary },
+  roleBtnDesc: { fontFamily: "Inter_400Regular", fontSize: 11, color: Colors.textSecondary, textAlign: "center" },
 });
