@@ -82,7 +82,7 @@ export default function EventDetailScreen() {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
-          await deleteEvent.mutateAsync(eventId);
+          await deleteEvent.mutateAsync({ id: eventId });
           queryClient.invalidateQueries({ queryKey: ["getEvents"] });
           queryClient.invalidateQueries({ queryKey: ["getReportSummary"] });
           router.back();
@@ -98,7 +98,7 @@ export default function EventDetailScreen() {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
-          await deletePayment.mutateAsync(paymentId);
+          await deletePayment.mutateAsync({ id: paymentId });
           queryClient.invalidateQueries({ queryKey: ["getPayments"] });
           queryClient.invalidateQueries({ queryKey: ["getIncomeReport"] });
           queryClient.invalidateQueries({ queryKey: ["getReportSummary"] });

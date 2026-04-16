@@ -54,7 +54,7 @@ export default function MusicianDetailScreen() {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
-          await deleteMusician.mutateAsync(musicianId);
+          await deleteMusician.mutateAsync({ id: musicianId });
           queryClient.invalidateQueries({ queryKey: ["getMusicians"] });
           router.back();
         },

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, clientsTable } from "@workspace/db";
+import { db, clientsTable, eventsTable, bookingRequestsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -7,10 +7,7 @@ const router: IRouter = Router();
 router.get("/clients", async (req, res) => {
   try {
     const clients = await db.select().from(clientsTable).orderBy(clientsTable.createdAt);
-    res.json(clients.map(c => ({
-      ...c,
-      createdAt: c.createdAt.toISOString(),
-    })));
+    res.json(clients.map(c => ({ ...c, createdAt: c.createdAt.toISOString() })));
   } catch (err) {
     req.log.error({ err }, "Error fetching clients");
     res.status(500).json({ error: "Internal server error" });
@@ -20,11 +17,9 @@ router.get("/clients", async (req, res) => {
 router.post("/clients", async (req, res) => {
   try {
     const { name, phone, email, address, notes } = req.body;
-    if (!name || !phone) {
-      return res.status(400).json({ error: "Name and phone are required" });
-    }
+    if (!name || !phone) return res.status(400).json({ error: "Name and phone are required" });
     const [client] = await db.insert(clientsTable).values({ name, phone, email, address, notes }).returning();
-    res.status(201).json({ ...client, createdAt: client.createdAt.toISOString() });
+    res.status(201).json({ ...client!, createdAt: client!.createdAt.toISOString() });
   } catch (err) {
     req.log.error({ err }, "Error creating client");
     res.status(500).json({ error: "Internal server error" });
@@ -59,6 +54,14 @@ router.put("/clients/:id", async (req, res) => {
 router.delete("/clients/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
+    // 1. Remove client from events (set null)
+    await db.update(eventsTable).set({ clientId: null }).where(eq(eventsTable.clientId, id));
+    // 2. Delete booking requests linked to this client
+    await db.delete(bookingRequestsTable).where(eq(bookingRequestsTable.clientId, id));
+    // 3. Unlink user account (set clientId null, don't delete the user)
+    await db.update(usersTable).set({ clientId: null }).where(eq(usersTable.clientId, id));
+    // 4. Delete the client
     await db.delete(clientsTable).where(eq(clientsTable.id, id));
     res.status(204).send();
   } catch (err) {

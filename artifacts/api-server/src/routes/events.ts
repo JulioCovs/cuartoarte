@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, eventsTable, clientsTable, eventMusiciansTable, musiciansTable } from "@workspace/db";
+import { db, eventsTable, clientsTable, eventMusiciansTable, musiciansTable, bookingRequestsTable } from "@workspace/db";
 import { eq, and, gte, lte, inArray } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -174,6 +174,10 @@ router.put("/events/:id", async (req, res) => {
 router.delete("/events/:id", async (req, res) => {
   try {
     const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ error: "ID inválido" });
+    // 1. Unlink booking requests that reference this event
+    await db.update(bookingRequestsTable).set({ eventId: null }).where(eq(bookingRequestsTable.eventId, id));
+    // 2. Delete event (ON DELETE CASCADE handles event_musicians and payments)
     await db.delete(eventsTable).where(eq(eventsTable.id, id));
     res.status(204).send();
   } catch (err) {

@@ -64,7 +64,7 @@ export default function ClientDetailScreen() {
         text: "Eliminar",
         style: "destructive",
         onPress: async () => {
-          await deleteClient.mutateAsync(clientId);
+          await deleteClient.mutateAsync({ id: clientId });
           queryClient.invalidateQueries({ queryKey: ["getClients"] });
           router.back();
         },
