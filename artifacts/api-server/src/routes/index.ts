@@ -8,6 +8,7 @@ import reportsRouter from "./reports";
 import authRouter from "./auth";
 import bookingsRouter from "./bookings";
 import expensesRouter from "./expenses";
+import stripeRouter from "./stripe";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(paymentsRouter);
 router.use(reportsRouter);
 router.use(bookingsRouter);
 router.use(expensesRouter);
+router.use(stripeRouter);
 
 export default router;

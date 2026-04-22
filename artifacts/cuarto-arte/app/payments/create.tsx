@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import * as Linking from "expo-linking";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
@@ -33,8 +34,11 @@ export default function CreatePaymentScreen() {
 
   const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const isClient = user?.role === "client";
+  const apiBase = process.env.EXPO_PUBLIC_DOMAIN
+    ? `https://${process.env.EXPO_PUBLIC_DOMAIN}`
+    : "";
 
   const { data: events } = useGetEvents({});
   const createPayment = useCreatePayment();
@@ -80,7 +84,58 @@ export default function CreatePaymentScreen() {
     await submitPayment(parsedAmount);
   };
 
+  const startStripeCheckout = async (parsedAmount: number) => {
+    setSaving(true);
+    try {
+      const res = await fetch(`${apiBase}/api/stripe/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: JSON.stringify({
+          eventId: selectedEventId,
+          amount: parsedAmount,
+          type,
+          date,
+          notes: notes.trim() || null,
+        }),
+      });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.error || "No se pudo crear la sesión de pago");
+      }
+      const { url } = await res.json();
+      if (!url) throw new Error("URL de pago no disponible");
+
+      Alert.alert(
+        "Abrir pago seguro",
+        "Te llevaremos al sitio seguro de Stripe para completar el pago con tarjeta. Al terminar, regresa a la app y desliza para refrescar.",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Continuar",
+            onPress: async () => {
+              await Linking.openURL(url);
+              router.back();
+            },
+          },
+        ]
+      );
+    } catch (err: any) {
+      Alert.alert("Error", err?.message ?? "No se pudo iniciar el pago con tarjeta");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const submitPayment = async (parsedAmount: number) => {
+    // Card payments go through Stripe Checkout
+    if (method === "tarjeta") {
+      await startStripeCheckout(parsedAmount);
+      return;
+    }
+
     setSaving(true);
     try {
       await createPayment.mutateAsync({
